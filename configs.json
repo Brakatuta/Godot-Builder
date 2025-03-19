@@ -2,5 +2,9 @@
     "godotPath": "C:\\Users\\joesa\\Desktop\\Custom 2D Optimized Godot\\Godot4.4.stable.modded\\godot\\",
     "binPath": "C:\\Users\\joesa\\Desktop\\Custom 2D Optimized Godot\\Godot4.4.stable.modded\\godot\\bin\\",
     "gradleCacheFolder": "C:\\Users\\joesa\\.gradle\\caches",
-    "disable3DforTemplate" : "yes"
+    "amountThreads": 10,
+    "buildwithLTO" : true,
+    "disable3DforTemplate" : "no",
+    "buildAndroidDebugTemplate" : true,
+    "buildAndroidReleaseTemplate" : true
 }  

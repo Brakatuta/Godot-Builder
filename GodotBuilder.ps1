@@ -14,7 +14,14 @@ $config = Get-Content -Path $jsonPath | ConvertFrom-Json
 $godotPath = $config.godotPath
 $binPath = $config.binPath
 $gradleCacheFolder = $config.gradleCacheFolder
+$buildwithLTO = $config.buildwithLTO
 $disable3DforTemplate = $config.disable3DforTemplate
+$buildAndroidDebugTemplate = $config.buildAndroidDebugTemplate
+$buildAndroidReleaseTemplate = $config.buildAndroidReleaseTemplate
+
+if ($config.amountThreads -lt $cpuThreads) {
+    $cpuThreads = $config.amountThreads
+}
 
 function getFunctionExecutionTimeString {
     param ([datetime]$startTime)
@@ -36,31 +43,29 @@ function BuildWindowsEditor {
 }
 
 function BuildWindowsTemplates {
-    param ([bool]$use_lto = $false)
-
-    $startTime = Get-Date
-
-    if ($use_lto) {
+    if ($buildwithLTO) {
         Write-Host "Building Windows Templates with Link Time Optimization..." -ForegroundColor Green
     } else {
         Write-Host "Building Windows Templates..." -ForegroundColor Green
     }
 
     Set-Location $godotPath
+
+    $startTime = Get-Date
     
-    scons --clean windows
-    
-    scons platform=windows use_mingw=yes use_cvtt=yes disable_3d=$($disable3DforTemplate) target=template_debug arch=x86_64 -j($cpuThreads)
-    
-    Write-Host "Windows Debug Template build finished!" -ForegroundColor Green
-    
-    if ($use_lto) {
+    if ($buildwithLTO) {
         scons platform=windows use_mingw=yes use_cvtt=yes disable_3d=$($disable3DforTemplate) use_lto=yes debug_symbols=no optimize=speed use_static_cpp=yes target=template_release arch=x86_64 -j($cpuThreads)
     } else {
         scons platform=windows use_mingw=yes use_cvtt=yes disable_3d=$($disable3DforTemplate) target=template_release arch=x86_64 -j($cpuThreads)
     }
     
-    Write-Host "Windows Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
+    Write-Host "Windows Release Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
+
+    $startTime = Get-Date
+    
+    scons platform=windows use_mingw=yes use_cvtt=yes disable_3d=$($disable3DforTemplate) target=template_debug arch=x86_64 -j($cpuThreads)
+    
+    Write-Host "Windows Debug Template build finished!" -ForegroundColor Green
 }
 
 function cleanAndroidGradleCaches {
@@ -80,8 +85,6 @@ function cleanAndroidGradleCaches {
 }
 
 function BuildAndroidTemplates {
-    param ([bool]$use_lto = $false)
-
     # needed for godot android: https://github.com/godotengine/godot-swappy/releases (swappy-frame-pacing = folder name in thirdparty dir)
 
     Stop-Process -Name "java" -Force -ErrorAction SilentlyContinue
@@ -89,7 +92,7 @@ function BuildAndroidTemplates {
     Stop-Process -Name "jdk" -Force -ErrorAction SilentlyContinue
     Get-Process | Where-Object { $_.ProcessName -match "java|gradle" } | Stop-Process -Force
 
-    if ($use_lto) {
+    if ($buildwithLTO) {
         Write-Host "Building Android Templates with Link Time Optimization..." -ForegroundColor Green
     } else {
         Write-Host "Building Android Templates..." -ForegroundColor Green
@@ -98,22 +101,27 @@ function BuildAndroidTemplates {
     Set-Location $godotPath
 
     $startTime = Get-Date
-    
-    scons platform=android use_mingw=yes target=template_debug disable_3d=$($disable3DforTemplate) debug_symbols=yes no_cache=yes arch=arm32 CC=clang CXX=clang++ -j($cpuThreads)
-    scons platform=android use_mingw=yes target=template_debug disable_3d=$($disable3DforTemplate)debug_symbols=yes no_cache=yes arch=arm64 CC=clang CXX=clang++ -j($cpuThreads) generate_apk=yes
-    
-    Write-Host "Android Debug Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
-    $startTime = Get-Date
 
-    if ($use_lto) {
-        scons platform=android use_mingw=yes target=template_release disable_3d=$($disable3DforTemplate) use_lto=yes debug_symbols=no optimize=speed no_cache=yes arch=arm32 CC=clang CXX=clang++ -j($cpuThreads)
-        scons platform=android use_mingw=yes target=template_release disable_3d=$($disable3DforTemplate) use_lto=yes debug_symbols=no optimize=speed no_cache=yes arch=arm64 CC=clang CXX=clang++ -j($cpuThreads)
-    } else {
-        scons platform=android use_mingw=yes target=template_release disable_3d=$($disable3DforTemplate) debug_symbols=no no_cache=yes arch=arm32 CC=clang CXX=clang++ -j($cpuThreads)
-        scons platform=android use_mingw=yes target=template_release disable_3d=$($disable3DforTemplate) debug_symbols=no no_cache=yes arch=arm64 CC=clang CXX=clang++ -j($cpuThreads) generate_apk=yes
+    if ($buildAndroidReleaseTemplate) {
+        if ($buildwithLTO) {
+            scons platform=android use_mingw=yes target=template_release disable_3d=$($disable3DforTemplate) use_lto=yes debug_symbols=no optimize=speed no_cache=yes arch=arm32 CC=clang CXX=clang++ -j($cpuThreads)
+            scons platform=android use_mingw=yes target=template_release disable_3d=$($disable3DforTemplate) use_lto=yes debug_symbols=no optimize=speed no_cache=yes arch=arm64 CC=clang CXX=clang++ -j($cpuThreads) generate_apk=yes
+        } else {
+            scons platform=android use_mingw=yes target=template_release disable_3d=$($disable3DforTemplate) debug_symbols=no no_cache=yes arch=arm32 CC=clang CXX=clang++ -j($cpuThreads)
+            scons platform=android use_mingw=yes target=template_release disable_3d=$($disable3DforTemplate) debug_symbols=no no_cache=yes arch=arm64 CC=clang CXX=clang++ -j($cpuThreads) generate_apk=yes
+        }
+        
+        Write-Host "Android Release Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
     }
+
+    $startTime = Get-Date
     
-    Write-Host "Android Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
+    if ($buildAndroidDebugTemplate) {
+        scons platform=android use_mingw=yes target=template_debug disable_3d=$($disable3DforTemplate) debug_symbols=yes no_cache=yes arch=arm32 CC=clang CXX=clang++ -j($cpuThreads)
+        scons platform=android use_mingw=yes target=template_debug disable_3d=$($disable3DforTemplate) debug_symbols=yes no_cache=yes arch=arm64 CC=clang CXX=clang++ -j($cpuThreads) generate_apk=yes
+        
+        Write-Host "Android Debug Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
+    }
 }
 
 function CreateAndroidGradleBuildFolder {
@@ -176,12 +184,11 @@ function Initialize {
     Write-Host "3. Build Editor" -ForegroundColor Cyan
     Write-Host "4. Build Templates" -ForegroundColor Green
     Write-Host "5. Build Windows Templates only" -ForegroundColor Green
-    Write-Host "6. Build Templates with Link Time Optimization" -ForegroundColor Green
-    Write-Host "7. Build only Android Templates with LTO" -ForegroundColor Green
-    Write-Host "8  Create Android Gradle Build Folder" -ForegroundColor Green
-    Write-Host "9. Exit Builder" -ForegroundColor Red
+    Write-Host "6. Build only Android Templates" -ForegroundColor Green
+    Write-Host "7  Create Android Gradle Build Folder" -ForegroundColor Green
+    Write-Host "8. Exit Builder" -ForegroundColor Red
 
-    $choice = Read-Host "Enter a valid option between 1 and 9"
+    $choice = Read-Host "Enter a valid option between 1 and 8"
 
     switch ($choice) {
         1 {
@@ -203,35 +210,28 @@ function Initialize {
             Initialize
         }
         4 { 
-            Write-Host "Building Templates (3d disabled: $disable3DforTemplate)..." -ForegroundColor Green
+            Write-Host "Building Templates..." -ForegroundColor Green
             BuildWindowsTemplates
             BuildAndroidTemplates
             CreateAndroidGradleBuildFolder
             Initialize
         }
         5 {	
-            Write-Host "Building Windows Templates (3d disabled: $disable3DforTemplate)..." -ForegroundColor Green
+            Write-Host "Building only Windows Templates..." -ForegroundColor Green
             BuildWindowsTemplates
             Initialize
         }
         6 {
-            Write-Host "Building Templates with Link Time Optimization (3d disabled: $disable3DforTemplate)..." -ForegroundColor Green
-            BuildWindowsTemplates -use_lto $true
-            BuildAndroidTemplates -use_lto $true
-            CreateAndroidGradleBuildFolder
+            Write-Host "Building only Android Templates..." -ForegroundColor Green
+            BuildAndroidTemplates
             Initialize
         }
         7 {
-            Write-Host "Building only Android Templates with LTO (3d disabled: $disable3DforTemplate)..." -ForegroundColor Green
-            BuildAndroidTemplates -use_lto $true
-            Initialize
-        }
-        8 {
             Write-Host "Creating Android Gradle Build Folder..." -ForegroundColor Green
             CreateAndroidGradleBuildFolder
             Initialize
         }
-        9 {
+        8 {
             Write-Host "Exiting Builder..." -ForegroundColor Red
             exit
         }
