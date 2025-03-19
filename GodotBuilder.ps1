@@ -65,7 +65,7 @@ function BuildWindowsTemplates {
     
     scons platform=windows use_mingw=yes use_cvtt=yes disable_3d=$($disable3DforTemplate) target=template_debug arch=x86_64 -j($cpuThreads)
     
-    Write-Host "Windows Debug Template build finished!" -ForegroundColor Green
+    Write-Host "Windows Debug Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
 }
 
 function cleanAndroidGradleCaches {
