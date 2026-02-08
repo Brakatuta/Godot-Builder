@@ -1,0 +1,12 @@
+{
+	"disabled_build_options": {
+		"brotli": false,
+		"disable_2d_physics": true,
+		"disable_navigation": true,
+		"graphite": false,
+		"openxr": false
+	},
+	"disabled_classes": [
+	],
+	"type": "build_profile"
+}
