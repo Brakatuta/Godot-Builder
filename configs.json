@@ -1,6 +1,6 @@
 {
-    "godotPath": "C:\\Users\\Joel\\Projects\\GodotProjects\\OptimizedGodot\\Godot4.6.CrazyIslands\\godot\\",
-    "binPath": "C:\\Users\\Joel\\Projects\\GodotProjects\\OptimizedGodot\\Godot4.6.CrazyIslands\\godot\\bin\\",
+    "godotPath": "...\\godot\\",
+    "binPath": "...\\godot\\bin\\",
     "gradleCacheFolder": "C:\\Users\\Joel\\.gradle\\caches",
     "godotVersion": "4.6.stable.CrazyIslands",
     "disable_path_overrides" : "no",
@@ -8,16 +8,16 @@
     "supportArm32" : false,
     "buildwithLTO" : true,
     "buildwithLLVM" : true,
-    "custom_modules_file_windows" : "C:\\Users\\Joel\\Projects\\GodotProjects\\OptimizedGodot\\Godot4.6.CrazyIslands\\GodotBuilder\\windows\\custom.py",
-    "custom_modules_file_linux" : "C:\\Users\\Joel\\Projects\\GodotProjects\\OptimizedGodot\\Godot4.6.CrazyIslands\\GodotBuilder\\linux\\custom.py",
-    "custom_modules_file_mobile" : "C:\\Users\\Joel\\Projects\\GodotProjects\\OptimizedGodot\\Godot4.6.CrazyIslands\\GodotBuilder\\android\\custom.py",
-    "custom_build_profile_windows" : "C:\\Users\\Joel\\Projects\\GodotProjects\\OptimizedGodot\\Godot4.6.CrazyIslands\\GodotBuilder\\windows\\custom.build",
-    "custom_build_profile_linux" : "C:\\Users\\Joel\\Projects\\GodotProjects\\OptimizedGodot\\Godot4.6.CrazyIslands\\GodotBuilder\\linux\\custom.build",
-    "custom_build_profile_mobile" : "C:\\Users\\Joel\\Projects\\GodotProjects\\OptimizedGodot\\Godot4.6.CrazyIslands\\GodotBuilder\\android\\custom.build",
+    "custom_modules_file_windows" : "PATH TO YOUR CUSTOM WINDOWS FILE",
+    "custom_modules_file_linux" : "PATH TO YOUR CUSTOM LINUX FILE",
+    "custom_modules_file_mobile" : "PATH TO YOUR CUSTOM ANDROID FILE",
+    "custom_build_profile_windows" : "PATH TO YOUR CUSTOM WINDOWS BUILD FILE",
+    "custom_build_profile_linux" : "PATH TO YOUR CUSTOM LINUX BUILD FILE",
+    "custom_build_profile_mobile" : "PATH TO YOUR CUSTOM ANDROID BUILD FILE",
     "disable3DforTemplate" : "no",
     "optimize" : "speed",
     "use_static_cpp" : "yes",
     "buildAndroidDebugTemplate" : true,
     "buildAndroidReleaseTemplate" : true,
-    "AES_encryption_key" : "6C6B7784E6F6273250552722A549BB65F999CB21DA09F7B24B2773AAF2805D40"
+    "AES_encryption_key" : "YOUR KEY"
 }
