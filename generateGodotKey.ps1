@@ -5,5 +5,5 @@ $bytes = [byte[]]::new(32)
 $hex = ($bytes | ForEach-Object { $_.ToString("X2") }) -join ""
 Set-Content -Path "$script_dir\godot.gdkey" -Value $hex
 
-Write-Host "godot.gdkey generated successfully: $hex" -ForegroundColor Green
+Write-Host "Your godot.gdkey generated successfully: $hex" -ForegroundColor Green
 write-host ""
