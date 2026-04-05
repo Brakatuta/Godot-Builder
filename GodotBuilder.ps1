@@ -23,7 +23,7 @@ $buildwithLTO = $config.buildwithLTO
 
 $buildwithLLVM = $config.buildwithLLVM
 
-$supportArm32 = $config.supportArm32
+$use_all_debug_symbols = $config.use_all_debug_symbols
 
 $disable3DforTemplate = $config.disable3DforTemplate
 
@@ -37,6 +37,15 @@ $buildAndroidReleaseTemplate = $config.buildAndroidReleaseTemplate
 $custom_modules_file_windows = $config.custom_modules_file_windows
 $custom_modules_file_linux = $config.custom_modules_file_linux
 $custom_modules_file_mobile = $config.custom_modules_file_mobile
+
+$build_with_custom_windows_modules = $config.build_with_custom_windows_modules
+$build_with_custom_windows_build_profile = $config.build_with_custom_windows_build_profile
+
+$build_with_custom_linux_modules = $config.build_with_custom_linux_modules
+$build_with_custom_linux_build_profile = $config.build_with_custom_linux_build_profile
+
+$build_with_custom_mobile_modules = $config.build_with_custom_mobile_modules
+$build_with_custom_mobile_build_profile = $config.build_with_custom_mobile_build_profile
 
 $custom_build_profile_windows = $config.custom_build_profile_windows
 $custom_build_profile_linux = $config.custom_build_profile_linux
@@ -68,27 +77,80 @@ function BuildWindowsEditor {
 }
 
 function BuildWindowsTemplates {
-    if ($buildwithLTO) {
-        Write-Host "Building Windows Templates with Link Time Optimization..." -ForegroundColor Green
-    } else {
-        Write-Host "Building Windows Templates..." -ForegroundColor Green
-    }
-
     Set-Location $godotPath
 
     $startTime = Get-Date
-    
-    if ($buildwithLTO) {
-        scons platform=windows disable_path_overrides=$($disbaled_path_overrides) use_mingw=yes use_llvm=$($buildwithLLVM) use_cvtt=yes production=yes profile=$($custom_modules_file_windows) build_profile=$($custom_build_profile_windows) disable_3d=$($disable3DforTemplate) lto=full debug_symbols=no tools_enabled=no optimize=$($optimize) use_static_cpp=$($use_static_cpp) target=template_release arch=x86_64 -j($cpuThreads)
-    } else {
-        scons platform=windows disable_path_overrides=$($disbaled_path_overrides) use_mingw=yes use_llvm=$($buildwithLLVM) use_cvtt=yes production=yes profile=$($custom_modules_file_windows) build_profile=$($custom_build_profile_windows) disable_3d=$($disable3DforTemplate) debug_symbols=no tools_enabled=no optimize=$($optimize) use_static_cpp=$($use_static_cpp) target=template_release arch=x86_64 -j($cpuThreads)
+
+    $releaseBuild_args = @()
+    $releaseBuild_args += "platform=windows"
+    $releaseBuild_args += "disable_path_overrides=$($disbaled_path_overrides)"
+    $releaseBuild_args += "use_mingw=yes"
+    $releaseBuild_args += "use_llvm=$($buildwithLLVM)"
+    $releaseBuild_args += "use_cvtt=yes"
+    $releaseBuild_args += "production=yes"
+
+    if ($build_with_custom_windows_modules) {
+        $releaseBuild_args += "profile=$($custom_modules_file_windows)"
     }
+
+    if ($build_with_custom_windows_build_profile) {
+        $releaseBuild_args += "build_profile=$($custom_build_profile_windows)"
+    }
+
+    $releaseBuild_args += "disable_3d=$($disable3DforTemplate)"
+
+    if ($buildwithLTO) {
+        Write-Host "Building Windows Release Template with Link Time Optimization..." -ForegroundColor Green
+        $releaseBuild_args += "lto=full"
+    } else {
+        Write-Host "Building Windows Release Template..." -ForegroundColor Green
+    }
+
+    $releaseBuild_args += "debug_symbols=no"
+    $releaseBuild_args += "tools_enabled=no"
+    $releaseBuild_args += "optimize=$($optimize)"
+    $releaseBuild_args += "use_static_cpp=$($use_static_cpp)"
+    $releaseBuild_args += "target=template_release"
+    $releaseBuild_args += "arch=x86_64"
+    $releaseBuild_args += "-j$($cpuThreads)"
+
+    Write-Host "Running: scons $($releaseBuild_args -join ' ')" -ForegroundColor Gray
+    scons @releaseBuild_args
     
     Write-Host "Windows Release Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
 
+    # Debug Build
     $startTime = Get-Date
 
-    scons platform=windows disable_path_overrides=$($disbaled_path_overrides) use_mingw=yes use_llvm=$($buildwithLLVM) use_cvtt=yes profile=$($custom_modules_file_windows) build_profile=$($custom_build_profile_windows) disable_3d=$($disable3DforTemplate) target=template_debug use_static_cpp=$($use_static_cpp) arch=x86_64 -j($cpuThreads)
+    $debugBuild_args = @()
+    $debugBuild_args += "platform=windows"
+    $debugBuild_args += "disable_path_overrides=$($disbaled_path_overrides)"
+    $debugBuild_args += "use_mingw=yes"
+    $debugBuild_args += "use_llvm=$($buildwithLLVM)"
+    $debugBuild_args += "use_cvtt=yes"
+
+    if ($build_with_custom_windows_modules) {
+        $debugBuild_args += "profile=$($custom_modules_file_windows)"
+    }
+
+    if ($build_with_custom_windows_build_profile) {
+        $debugBuild_args += "build_profile=$($custom_build_profile_windows)"
+    }
+
+    $debugBuild_args += "disable_3d=$($disable3DforTemplate)"
+
+    if ($use_all_debug_symbols) {
+        $debugBuild_args += "debug_symbols=yes"
+    }
+
+    $debugBuild_args += "use_static_cpp=$($use_static_cpp)"
+    $debugBuild_args += "target=template_debug"
+    $debugBuild_args += "arch=x86_64"
+    $debugBuild_args += "-j$($cpuThreads)"
+
+    Write-Host "Building Windows Debug Template..." -ForegroundColor Green
+    Write-Host "Running: scons $($debugBuild_args -join ' ')" -ForegroundColor Gray
+    scons @debugBuild_args
 
     Write-Host "Windows Debug Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
 }
@@ -146,15 +208,15 @@ function BuildWindowsTemplates {
         }
 
         # Convert the profile paths for Linux consumption
-        if ($custom_modules_file_linux) {
+        if ($build_with_custom_linux_modules) {
             $wslProfile = Convert-ToWslPath $custom_modules_file_linux
             $sArgs += "profile=`"$wslProfile`" "
         }
 
-        # if ($custom_build_profile_linux) {
-        #     $wslBuildProfile = Convert-ToWslPath $custom_build_profile_linux
-        #     $sArgs += "build_profile=`"$wslBuildProfile`" "
-        # }
+        if ($build_with_custom_linux_build_profile) {
+            $wslBuildProfile = Convert-ToWslPath $custom_build_profile_linux
+            $sArgs += "build_profile=`"$wslBuildProfile`" "
+        }
 
         if ($target -eq "template_release") {
             $sArgs += "production=yes debug_symbols=no tools_enabled=no optimize=$optimize "
@@ -184,6 +246,8 @@ function BuildWindowsTemplates {
     $debugArgs = Get-SconsArgs "template_debug" $false
 
     Write-Host "Running Linux Debug Build in WSL (Ubuntu)..." -ForegroundColor Green
+    Write-Host "Running: scons $debugArgs" -ForegroundColor Gray
+
     wsl -d $distro -u root --cd "$wslPath" sh -c "export SCRIPT_AES256_ENCRYPTION_KEY=$($config.AES_encryption_key) && scons $debugArgs"
 
     if ($LASTEXITCODE -ne 0) {
@@ -216,41 +280,78 @@ function BuildAndroidTemplates {
     Stop-Process -Name "adb" -Force -ErrorAction SilentlyContinue
     Stop-Process -Name "jdk" -Force -ErrorAction SilentlyContinue
     Get-Process | Where-Object { $_.ProcessName -match "java|gradle" } | Stop-Process -Force
-
-    if ($buildwithLTO) {
-        Write-Host "Building Android Templates with Link Time Optimization..." -ForegroundColor Green
-    } else {
-        Write-Host "Building Android Templates..." -ForegroundColor Green
-    }
     
     Set-Location $godotPath
 
     $startTime = Get-Date
 
     if ($buildAndroidReleaseTemplate) {
-        if ($buildwithLTO) {
-            if ($supportArm32) {
-                scons platform=android target=template_release production=yes profile=$($custom_modules_file_mobile) build_profile=$($custom_build_profile_mobile) disable_3d=$($disable3DforTemplate) lto=full debug_symbols=no tools_enabled=no optimize=$($optimize) arch=arm32 CC=clang CXX=clang++ -j($cpuThreads)
-            }
-            scons platform=android target=template_release production=yes profile=$($custom_modules_file_mobile) build_profile=$($custom_build_profile_mobile) disable_3d=$($disable3DforTemplate) lto=full debug_symbols=no tools_enabled=no optimize=$($optimize) arch=arm64 CC=clang CXX=clang++ -j($cpuThreads) generate_apk=yes
-        } else {
-            if ($supportArm32) {
-                scons platform=android target=template_release production=yes profile=$($custom_modules_file_mobile) build_profile=$($custom_build_profile_mobile) disable_3d=$($disable3DforTemplate) debug_symbols=no tools_enabled=no optimize=$($optimize) arch=arm32 CC=clang CXX=clang++ -j($cpuThreads)
-            }
-            scons platform=android target=template_release production=yes profile=$($custom_modules_file_mobile) build_profile=$($custom_build_profile_mobile) disable_3d=$($disable3DforTemplate) debug_symbols=no tools_enabled=no optimize=$($optimize) arch=arm64 CC=clang CXX=clang++ -j($cpuThreads) generate_apk=yes
+        $releaseArgs = @()
+        $releaseArgs += "platform=android"
+        $releaseArgs += "target=template_release"
+        $releaseArgs += "production=yes"
+
+        if ($build_with_custom_mobile_modules) {
+            $releaseArgs += "profile=$($custom_modules_file_mobile)"
         }
-        
-        Write-Host "Android Release Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
+
+        if ($build_with_custom_mobile_build_profile) {
+            $releaseArgs += "build_profile=$($custom_build_profile_mobile)"
+        }
+
+        $releaseArgs += "disable_3d=$($disable3DforTemplate)"
+
+        if ($buildwithLTO) {
+            $releaseArgs += "lto=full"
+            Write-Host "Building Android Release Template with Link Time Optimization..." -ForegroundColor Green
+        } else {
+            Write-Host "Building Android Release Template..." -ForegroundColor Green
+        }
+
+        $releaseArgs += "debug_symbols=no"
+        $releaseArgs += "tools_enabled=no"
+        $releaseArgs += "optimize=$($optimize)"
+        $releaseArgs += "arch=arm64"
+        $releaseArgs += "CC=clang"
+        $releaseArgs += "CXX=clang++"
+        $releaseArgs += "-j$($cpuThreads)"
     }
 
+    Write-Host "Running: scons $($releaseArgs -join ' ')" -ForegroundColor Gray
+    scons @releaseArgs
+
+    Write-Host "Android Release Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
+
     $startTime = Get-Date
-    
+
     if ($buildAndroidDebugTemplate) {
-        if ($supportArm32) {
-            scons platform=android target=template_debug disable_3d=$($disable3DforTemplate) debug_symbols=yes arch=arm32 CC=clang CXX=clang++ -j($cpuThreads)
+        $debugArgs = @()
+        $debugArgs += "platform=android"
+        $debugArgs += "target=template_debug"
+
+        if ($build_with_custom_mobile_modules) {
+            $debugArgs += "profile=$($custom_modules_file_mobile)"
         }
-        scons platform=android target=template_debug disable_3d=$($disable3DforTemplate) debug_symbols=yes arch=arm64 CC=clang CXX=clang++ -j($cpuThreads) generate_apk=yes
+
+        if ($build_with_custom_mobile_build_profile) {
+            $debugArgs += "build_profile=$($custom_build_profile_mobile)"
+        }
+
+        $debugArgs += "disable_3d=$($disable3DforTemplate)"
+
+        if ($use_all_debug_symbols) {
+            $debugArgs += "debug_symbols=yes"
+        } 
         
+        $debugArgs += "optimize=$($optimize)"
+        $debugArgs += "arch=arm64"
+        $debugArgs += "CC=clang"
+        $debugArgs += "CXX=clang++"
+        $debugArgs += "-j$($cpuThreads)"
+
+        Write-Host "Running: scons $($debugArgs -join ' ')" -ForegroundColor Gray
+        scons @debugArgs
+
         Write-Host "Android Debug Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
     }
 }

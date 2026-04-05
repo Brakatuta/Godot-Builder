@@ -33,7 +33,7 @@ module_pvr_enabled = "no"              # PVR texture format
 module_tinyexr_enabled = "no"          # EXR image format
 module_webp_enabled = "no"             # WebP image format
 
-module_csg_enabled = "no"
+module_csg_enabled = "yes"
 
 module_gdnative_enabled = "no"
 

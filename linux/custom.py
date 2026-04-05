@@ -14,7 +14,7 @@ module_vhacd_enabled = "no"
 # Rendering & Mesh Processing
 module_gridmap_enabled = "no"
 module_xatlas_unwrap_enabled = "no"
-module_csg_enabled = "no"
+module_csg_enabled = "yes"
 
 # Image Formats (disable unused formats)
 module_tga_enabled = "no"              # TGA image format
