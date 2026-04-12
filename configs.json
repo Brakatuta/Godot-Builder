@@ -1,7 +1,7 @@
 {
     "godotPath": "...\\godot\\",
     "binPath": "...\\godot\\bin\\",
-    "gradleCacheFolder": "C:\\Users\\Joel\\.gradle\\caches",
+    "gradleCacheFolder": "C:\\Users\\yourUser\\.gradle\\caches",
     "godotVersion": "4.6.stable.custom",
     "disable_path_overrides" : "no",
     "amountThreads": 16,
