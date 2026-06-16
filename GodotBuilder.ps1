@@ -317,12 +317,12 @@ function BuildAndroidTemplates {
         $releaseArgs += "CC=clang"
         $releaseArgs += "CXX=clang++"
         $releaseArgs += "-j$($cpuThreads)"
+
+        Write-Host "Running: scons $($releaseArgs -join ' ')" -ForegroundColor Gray
+        scons @releaseArgs
+
+        Write-Host "Android Release Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
     }
-
-    Write-Host "Running: scons $($releaseArgs -join ' ')" -ForegroundColor Gray
-    scons @releaseArgs
-
-    Write-Host "Android Release Template build finished in $(getFunctionExecutionTimeString $startTime)!" -ForegroundColor Green
 
     $startTime = Get-Date
 
@@ -331,6 +331,7 @@ function BuildAndroidTemplates {
         $debugArgs += "platform=android"
         $debugArgs += "target=template_debug"
         $debugArgs += "generate_android_binaries=yes"
+        $debugArgs += "swappy=yes"
 
         if ($build_with_custom_mobile_modules) {
             $debugArgs += "profile=$($custom_modules_file_mobile)"
