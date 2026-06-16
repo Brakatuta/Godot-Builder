@@ -290,6 +290,7 @@ function BuildAndroidTemplates {
         $releaseArgs += "platform=android"
         $releaseArgs += "target=template_release"
         $releaseArgs += "production=yes"
+        $releaseArgs += "swappy=yes"
 
         if ($build_with_custom_mobile_modules) {
             $releaseArgs += "profile=$($custom_modules_file_mobile)"
