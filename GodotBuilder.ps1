@@ -314,6 +314,7 @@ function BuildAndroidTemplates {
         $releaseArgs += "tools_enabled=no"
         $releaseArgs += "optimize=$($optimize)"
         $releaseArgs += "arch=arm64"
+        $releaseArgs += "linker_flags=-Wl,-z,max-page-size=16384"
         $releaseArgs += "CC=clang"
         $releaseArgs += "CXX=clang++"
         $releaseArgs += "-j$($cpuThreads)"
@@ -349,6 +350,7 @@ function BuildAndroidTemplates {
         
         $debugArgs += "optimize=$($optimize)"
         $debugArgs += "arch=arm64"
+        $debugArgs += "linker_flags=-Wl,-z,max-page-size=16384"
         $debugArgs += "CC=clang"
         $debugArgs += "CXX=clang++"
         $debugArgs += "-j$($cpuThreads)"
